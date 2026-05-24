@@ -1,0 +1,287 @@
+@import url('../styles/fonts.css');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── CSS Variables ───────────────────────────────────────────── */
+@layer base {
+  :root {
+    --background: 220 20% 97%;
+    --foreground: 224 71% 4%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 224 71% 4%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 71% 4%;
+
+    --primary: 238 75% 64%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 14% 93%;
+    --secondary-foreground: 224 71% 4%;
+
+    --muted: 220 14% 93%;
+    --muted-foreground: 220 9% 46%;
+
+    --accent: 220 14% 93%;
+    --accent-foreground: 224 71% 4%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 13% 89%;
+    --input: 220 13% 89%;
+    --ring: 238 75% 64%;
+
+    --radius: 0.75rem;
+
+    /* Glass */
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.5);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+
+    /* Sidebar */
+    --sidebar-width: 260px;
+    --sidebar-collapsed-width: 72px;
+    --header-height: 64px;
+  }
+
+  .dark {
+    --background: 224 71% 4%;
+    --foreground: 210 20% 96%;
+
+    --card: 224 50% 7%;
+    --card-foreground: 210 20% 96%;
+
+    --popover: 224 50% 7%;
+    --popover-foreground: 210 20% 96%;
+
+    --primary: 238 75% 64%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 215 28% 12%;
+    --secondary-foreground: 210 20% 96%;
+
+    --muted: 215 28% 12%;
+    --muted-foreground: 218 11% 58%;
+
+    --accent: 215 28% 14%;
+    --accent-foreground: 210 20% 96%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 215 28% 14%;
+    --input: 215 28% 14%;
+    --ring: 238 75% 64%;
+
+    /* Glass dark */
+    --glass-bg: rgba(15, 23, 42, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.06);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  }
+}
+
+/* ─── Base Styles ─────────────────────────────────────────────── */
+@layer base {
+  * {
+    @apply border-border;
+    box-sizing: border-box;
+  }
+
+  html {
+    direction: rtl;
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-background text-foreground font-vazir;
+    direction: rtl;
+    text-align: right;
+    line-height: 1.7;
+  }
+
+  /* RTL-aware focus rings */
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/20 rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/40;
+  }
+
+  /* Selection */
+  ::selection {
+    @apply bg-primary/20 text-foreground;
+  }
+
+  /* Typography scale */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-vazir font-bold tracking-tight;
+  }
+}
+
+/* ─── Utility Classes ─────────────────────────────────────────── */
+@layer utilities {
+  /* Glass morphism */
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+  }
+
+  .glass-strong {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(24px) saturate(200%);
+    -webkit-backdrop-filter: blur(24px) saturate(200%);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+  }
+
+  .dark .glass-strong {
+    background: rgba(15, 23, 42, 0.85);
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  /* Glow effects */
+  .glow-primary {
+    box-shadow: 0 0 20px rgba(97, 114, 243, 0.35),
+                0 0 60px rgba(97, 114, 243, 0.1);
+  }
+
+  .text-glow {
+    text-shadow: 0 0 20px rgba(97, 114, 243, 0.5);
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, #a78bfa 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* Shimmer skeleton */
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--muted)) 0%,
+      hsl(var(--muted-foreground) / 0.15) 50%,
+      hsl(var(--muted)) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s linear infinite;
+  }
+
+  /* Layout helpers */
+  .page-container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .section-gap {
+    @apply space-y-6;
+  }
+
+  /* Persian number styling */
+  .persian-nums {
+    font-feature-settings: "lnum" 0;
+  }
+
+  /* Floating card effect */
+  .floating-card {
+    @apply rounded-2xl glass transition-all duration-300;
+    transform: translateY(0);
+  }
+
+  .floating-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 4px 16px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Brand gradient background */
+  .bg-brand-mesh {
+    background-color: hsl(var(--background));
+    background-image:
+      radial-gradient(at 40% 20%, hsl(var(--primary) / 0.12) 0px, transparent 50%),
+      radial-gradient(at 80% 0%, rgba(167, 139, 250, 0.08) 0px, transparent 50%),
+      radial-gradient(at 0% 50%, hsl(var(--primary) / 0.06) 0px, transparent 50%);
+  }
+
+  /* Status badge */
+  .badge-success {
+    @apply bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20;
+  }
+  .badge-warning {
+    @apply bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20;
+  }
+  .badge-error {
+    @apply bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/20;
+  }
+  .badge-info {
+    @apply bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/20;
+  }
+
+  /* Checkerboard transparency pattern (for logo preview) */
+  .checkerboard {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(45deg, #e5e7eb 25%, transparent 25%),
+      linear-gradient(-45deg, #e5e7eb 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #e5e7eb 75%),
+      linear-gradient(-45deg, transparent 75%, #e5e7eb 75%);
+    background-size: 16px 16px;
+    background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+    background-color: #ffffff;
+    border-radius: inherit;
+  }
+
+  .dark .checkerboard {
+    background-image:
+      linear-gradient(45deg, #374151 25%, transparent 25%),
+      linear-gradient(-45deg, #374151 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #374151 75%),
+      linear-gradient(-45deg, transparent 75%, #374151 75%);
+    background-color: #1f2937;
+  }
+
+  /* Studio-specific layout utilities */
+  .studio-container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6;
+  }
+
+  /* Smooth number transitions */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Drag active glow */
+  .drag-active {
+    box-shadow: 0 0 0 3px hsl(var(--primary) / 0.2),
+                0 0 0 1px hsl(var(--primary) / 0.4);
+  }
+
+  /* Premium card hover */
+  .card-hover {
+    @apply transition-all duration-200;
+  }
+  .card-hover:hover {
+    @apply shadow-md -translate-y-0.5;
+  }
+}
