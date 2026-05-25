@@ -25,9 +25,10 @@ const Switch = React.forwardRef<
       className={cn(
         'pointer-events-none block size-5 rounded-full bg-white shadow-lg',
         'transition-transform duration-200',
-        // RTL: checked moves right (+20px), unchecked stays at 0
-        'data-[state=checked]:translate-x-5 data-[state=unchecked]:translate-x-0',
-        '[dir=rtl]:data-[state=checked]:-translate-x-5 [dir=rtl]:data-[state=unchecked]:translate-x-0'
+        // LTR: unchecked = left (0),  checked = right (+20px)
+        'data-[state=unchecked]:translate-x-0 data-[state=checked]:translate-x-5',
+        // RTL: unchecked = right (+20px), checked = left (0)  — swap positions
+        '[dir=rtl]:data-[state=unchecked]:translate-x-5 [dir=rtl]:data-[state=checked]:translate-x-0'
       )}
     />
   </SwitchPrimitives.Root>
