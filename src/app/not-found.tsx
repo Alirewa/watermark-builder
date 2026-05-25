@@ -1,3 +1,4 @@
+// Developed by @Alirewa — https://github.com/Alirewa
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Home, SearchX } from 'lucide-react';

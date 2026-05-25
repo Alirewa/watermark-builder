@@ -1,3 +1,4 @@
+// Developed by @Alirewa — https://github.com/Alirewa
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 

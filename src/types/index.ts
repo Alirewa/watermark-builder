@@ -1,3 +1,4 @@
+// Developed by @Alirewa — https://github.com/Alirewa
 /* ─── App Types ───────────────────────────────────────────────── */
 
 export type Theme = 'light' | 'dark' | 'system';

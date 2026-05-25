@@ -1,3 +1,4 @@
+// Developed by @Alirewa — https://github.com/Alirewa
 /**
  * Strips EXIF/XMP/ICC metadata by re-drawing through a canvas.
  * Returns a new Blob with clean image data.

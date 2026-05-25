@@ -1,3 +1,4 @@
+// Developed by @Alirewa — https://github.com/Alirewa
 'use client';
 
 import { useState, useRef, useCallback, useEffect } from 'react';
@@ -23,6 +24,7 @@ import { cn, isValidImageType } from '@/lib/utils';
 import { useWatermarkStore } from '@/store/useWatermarkStore';
 import { useExportStore } from '@/store/useExportStore';
 import { useToast } from '@/hooks/useToast';
+import { useT } from '@/hooks/useT';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -48,10 +50,12 @@ const SIZE_MAP: Record<string, number> = {
 /* ─── Template Visual Card ───────────────────────────────────── */
 function TemplateCard({
   template,
+  label,
   isSelected,
   onClick,
 }: {
   template: PlacementTemplate;
+  label: string;
   isSelected: boolean;
   onClick: () => void;
 }) {
@@ -65,7 +69,6 @@ function TemplateCard({
           : 'border-border/60 hover:border-primary/40 hover:bg-muted/50'
       )}
     >
-      {/* Dot layout preview */}
       <div className="relative w-full aspect-[3/2] rounded-xl bg-muted/70 overflow-hidden">
         {template.positions.map((pos, i) => (
           <div
@@ -78,33 +81,17 @@ function TemplateCard({
           />
         ))}
       </div>
-      <span
-        className={cn(
-          'text-[11px] font-bold',
-          isSelected ? 'text-primary' : 'text-muted-foreground'
-        )}
-      >
-        {template.label}
+      <span className={cn('text-[11px] font-bold', isSelected ? 'text-primary' : 'text-muted-foreground')}>
+        {label}
       </span>
     </button>
   );
 }
 
 /* ─── Section Card ───────────────────────────────────────────── */
-function SectionCard({
-  children,
-  className,
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
+function SectionCard({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div
-      className={cn(
-        'rounded-2xl border border-border/60 bg-card/70 backdrop-blur-sm p-5 shadow-sm',
-        className
-      )}
-    >
+    <div className={cn('rounded-2xl border border-border/60 bg-card/70 backdrop-blur-sm p-5 shadow-sm', className)}>
       {children}
     </div>
   );
@@ -116,6 +103,7 @@ export function WatermarkStudio() {
   const { images, addImages, removeImage } = store;
   const exportStore = useExportStore();
   const { toast } = useToast();
+  const { t } = useT();
 
   /* ── Local state ───────────────────────────────────────────── */
   const [logoUrl, setLogoUrl] = useState('');
@@ -149,7 +137,6 @@ export function WatermarkStudio() {
     if (logoUrl) store.setLogoUrl(logoUrl);
   }, [logoUrl]); // eslint-disable-line
 
-  /* Restore logo from store on mount */
   useEffect(() => {
     if (store.imageConfig.url && !logoUrl) setLogoUrl(store.imageConfig.url);
   }, []); // eslint-disable-line
@@ -160,22 +147,22 @@ export function WatermarkStudio() {
       if (!files) return;
       const valid = Array.from(files).filter((f) => isValidImageType(f.type));
       if (!valid.length) {
-        toast.error('فرمت نامعتبر', 'فقط JPG، PNG و WebP پشتیبانی می‌شوند');
+        toast.error(t.studio.toastInvalidFormat, t.studio.toastInvalidFormatDesc);
         return;
       }
       addImages(valid);
       setProcessedCount(0);
       setPreviewUrls([]);
-      toast.success(`${valid.length} تصویر اضافه شد`);
+      toast.success(`${valid.length} ${t.studio.toastImagesAdded}`);
     },
-    [addImages, toast]
+    [addImages, toast, t]
   );
 
   /* ── Logo handlers ─────────────────────────────────────────── */
   const handleLogo = useCallback(
     (file: File) => {
       if (!isValidImageType(file.type) && file.type !== 'image/svg+xml') {
-        toast.error('فرمت نامعتبر', 'PNG، SVG یا JPG مجاز است');
+        toast.error(t.studio.toastInvalidLogo, t.studio.toastInvalidLogoDesc);
         return;
       }
       if (logoUrl.startsWith('blob:')) URL.revokeObjectURL(logoUrl);
@@ -185,7 +172,7 @@ export function WatermarkStudio() {
       setPreviewUrls([]);
       setProcessedCount(0);
     },
-    [logoUrl, toast]
+    [logoUrl, toast, t]
   );
 
   const removeLogo = useCallback(() => {
@@ -199,48 +186,43 @@ export function WatermarkStudio() {
   const handlePreview = useCallback(async () => {
     if (!canProcess) return;
     setIsPreviewLoading(true);
-    const toPreview = images.slice(0, 3);
     try {
       const urls = await Promise.all(
-        toPreview.map((img) =>
+        images.slice(0, 3).map((img) =>
           applyTemplateWatermarks(img.url, logoUrl, wmOptions, quality)
         )
       );
       setPreviewUrls(urls);
       setShowPreviewModal(true);
     } catch {
-      toast.error('خطا در پیش‌نمایش');
+      toast.error(t.studio.toastPreviewError);
     } finally {
       setIsPreviewLoading(false);
     }
-  }, [canProcess, images, logoUrl, wmOptions, quality, toast]);
+  }, [canProcess, images, logoUrl, wmOptions, quality, toast, t]);
 
   /* ── Export ────────────────────────────────────────────────── */
   const runExport = useCallback(
     async (format: 'zip' | 'pdf') => {
       if (!canProcess || isProcessing) return;
-
       exportStore.startExport(format, images.length);
       setProcessedCount(0);
 
       try {
         const results = await batchApplyWatermarks(
-          images,
-          logoUrl,
-          wmOptions,
-          quality,
+          images, logoUrl, wmOptions, quality,
           (done, total) => {
             setProcessedCount(done);
             exportStore.updateProgress(
               total > 0 ? Math.round((done / total) * 80) : 0,
-              `پردازش تصویر ${done} از ${total}...`
+              `${t.studio.processingLabel} ${done}/${total}`
             );
           }
         );
 
-        exportStore.updateProgress(85, 'در حال فشرده‌سازی...');
+        exportStore.updateProgress(85, '…');
         const items = results.map((r) => ({ name: r.name, dataUrl: r.dataUrl }));
-        const title = baseName || 'واترمارک‌ها';
+        const title = baseName || 'watermarks';
 
         if (format === 'zip') {
           await exportAsZip(items, {
@@ -262,16 +244,24 @@ export function WatermarkStudio() {
         exportStore.finishExport();
         setProcessedCount(images.length);
         toast.success(
-          'خروجی آماده شد',
-          `${images.length} تصویر با واترمارک پردازش شدند`
+          t.studio.toastDoneTitle,
+          `${images.length} ${t.studio.toastDoneDesc}`
         );
       } catch (e) {
-        exportStore.failExport(e instanceof Error ? e.message : 'خطای ناشناخته');
-        toast.error('خطا در پردازش', 'لطفاً دوباره تلاش کنید');
+        exportStore.failExport(e instanceof Error ? e.message : 'error');
+        toast.error(t.studio.toastErrorTitle, t.studio.toastErrorDesc);
       }
     },
-    [canProcess, isProcessing, images, logoUrl, wmOptions, quality, baseName, exportStore, toast]
+    [canProcess, isProcessing, images, logoUrl, wmOptions, quality, baseName, exportStore, toast, t]
   );
+
+  /* Translated template labels */
+  const templateLabels: Record<string, string> = {
+    triangle:   t.studio.templates.triangle,
+    diagonal:   t.studio.templates.diagonal,
+    corners:    t.studio.templates.corners,
+    horizontal: t.studio.templates.horizontal,
+  };
 
   /* ═══════════════════════════ RENDER ════════════════════════ */
   return (
@@ -294,30 +284,20 @@ export function WatermarkStudio() {
               className="relative w-full max-w-5xl"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Image grid */}
               <div
                 className={cn(
                   'grid gap-3',
-                  previewUrls.length === 1
-                    ? 'grid-cols-1 max-w-2xl mx-auto'
-                    : previewUrls.length === 2
-                    ? 'grid-cols-2'
-                    : 'grid-cols-3'
+                  previewUrls.length === 1 ? 'grid-cols-1 max-w-2xl mx-auto'
+                  : previewUrls.length === 2 ? 'grid-cols-2'
+                  : 'grid-cols-3'
                 )}
               >
                 {previewUrls.map((url, i) => (
-                  <div
-                    key={i}
-                    className="relative rounded-2xl overflow-hidden shadow-2xl"
-                  >
+                  <div key={i} className="relative rounded-2xl overflow-hidden shadow-2xl">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={url}
-                      alt={`پیش‌نمایش ${i + 1}`}
-                      className="w-full object-contain max-h-[68vh]"
-                    />
+                    <img src={url} alt={`preview ${i + 1}`} className="w-full object-contain max-h-[68vh]" />
                     <div className="absolute bottom-2 start-2 bg-black/55 backdrop-blur-sm text-white text-[10px] px-2 py-1 rounded-lg font-medium">
-                      تصویر {i + 1}
+                      {i + 1}
                     </div>
                     <a
                       href={url}
@@ -330,7 +310,6 @@ export function WatermarkStudio() {
                   </div>
                 ))}
               </div>
-              {/* Close */}
               <button
                 onClick={() => setShowPreviewModal(false)}
                 className="absolute -top-3 -end-3 size-9 rounded-full bg-background border border-border shadow-xl flex items-center justify-center hover:bg-accent transition-colors z-10"
@@ -347,8 +326,6 @@ export function WatermarkStudio() {
 
         {/* ═══ LEFT: Images ════════════════════════════════════════ */}
         <div className="space-y-4">
-
-          {/* Image Drop Zone */}
           <motion.div
             animate={isDraggingImages ? { scale: 1.01 } : { scale: 1 }}
             transition={{ type: 'spring', bounce: 0.3 }}
@@ -361,24 +338,15 @@ export function WatermarkStudio() {
             }}
             onClick={() => imageInputRef.current?.click()}
             className={cn(
-              'relative rounded-3xl border-2 border-dashed cursor-pointer',
-              'transition-all duration-300 group',
-              images.length > 0
-                ? 'px-6 py-5'
-                : 'px-8 py-16 flex flex-col items-center justify-center gap-5',
+              'relative rounded-3xl border-2 border-dashed cursor-pointer transition-all duration-300 group',
+              images.length > 0 ? 'px-6 py-5' : 'px-8 py-16 flex flex-col items-center justify-center gap-5',
               isDraggingImages
                 ? 'border-primary bg-primary/8 shadow-[0_0_0_6px_hsl(var(--primary)/0.08)]'
                 : 'border-border hover:border-primary/50 hover:bg-primary/3'
             )}
           >
-            <input
-              ref={imageInputRef}
-              type="file"
-              multiple
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => handleImages(e.target.files)}
-            />
+            <input ref={imageInputRef} type="file" multiple accept="image/*" className="hidden"
+              onChange={(e) => handleImages(e.target.files)} />
 
             {images.length > 0 ? (
               <div className="flex items-center gap-4">
@@ -386,25 +354,17 @@ export function WatermarkStudio() {
                   animate={isDraggingImages ? { y: -4 } : { y: 0 }}
                   className={cn(
                     'size-12 rounded-2xl flex items-center justify-center shrink-0 transition-colors',
-                    isDraggingImages
-                      ? 'bg-primary/20 text-primary'
-                      : 'bg-primary/10 text-primary group-hover:bg-primary/20'
+                    isDraggingImages ? 'bg-primary/20 text-primary' : 'bg-primary/10 text-primary group-hover:bg-primary/20'
                   )}
                 >
                   <Upload className="size-5" />
                 </motion.div>
                 <div className="min-w-0">
-                  <p className="font-bold text-sm">
-                    {isDraggingImages ? 'رها کنید!' : 'تصویر بیشتری اضافه کنید'}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    JPG · PNG · WebP — تا ۱۰۰ تصویر همزمان
-                  </p>
+                  <p className="font-bold text-sm">{isDraggingImages ? '↓' : t.studio.addMore}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t.studio.addMoreHint}</p>
                 </div>
                 <div className="ms-auto shrink-0">
-                  <Badge className="rounded-xl text-sm font-black px-3 py-1">
-                    {images.length}
-                  </Badge>
+                  <Badge className="rounded-xl text-sm font-black px-3 py-1">{images.length}</Badge>
                 </div>
               </div>
             ) : (
@@ -413,34 +373,25 @@ export function WatermarkStudio() {
                   animate={isDraggingImages ? { y: -10, scale: 1.05 } : { y: 0, scale: 1 }}
                   className={cn(
                     'size-24 rounded-3xl flex items-center justify-center transition-colors',
-                    isDraggingImages
-                      ? 'bg-primary/20 text-primary'
+                    isDraggingImages ? 'bg-primary/20 text-primary'
                       : 'bg-muted/80 text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary'
                   )}
                 >
                   <Images className="size-11" />
                 </motion.div>
                 <div className="text-center space-y-2">
-                  <p className="text-xl font-black">
-                    {isDraggingImages ? 'رها کنید!' : 'تصاویر خود را اینجا بکشید'}
-                  </p>
-                  <p className="text-sm text-muted-foreground">یا کلیک کنید برای انتخاب فایل</p>
+                  <p className="text-xl font-black">{t.studio.dropImages}</p>
+                  <p className="text-sm text-muted-foreground">{t.studio.dropImagesHint}</p>
                   <div className="flex items-center justify-center gap-4 pt-1">
                     <span className="flex items-center gap-1.5 text-xs text-muted-foreground/70">
-                      <Zap className="size-3" />
-                      تا ۱۰۰ تصویر همزمان
+                      <Zap className="size-3" />{t.studio.dropImagesCaption}
                     </span>
                     <span className="text-muted-foreground/30">·</span>
                     <span className="text-xs text-muted-foreground/70">JPG · PNG · WebP</span>
                   </div>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="rounded-xl pointer-events-none h-9 px-5"
-                >
-                  <ImageIcon className="size-4" />
-                  انتخاب تصاویر
+                <Button variant="outline" size="sm" className="rounded-xl pointer-events-none h-9 px-5">
+                  <ImageIcon className="size-4" />{t.studio.selectBtn}
                 </Button>
               </>
             )}
@@ -449,15 +400,11 @@ export function WatermarkStudio() {
           {/* Image Grid */}
           <AnimatePresence>
             {images.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-              >
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}>
                 <SectionCard className="p-4">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-bold">تصاویر انتخاب‌شده</h3>
+                      <h3 className="text-sm font-bold">{t.studio.selectedImages}</h3>
                       <Badge className="text-xs rounded-xl">{images.length}</Badge>
                     </div>
                     <button
@@ -468,40 +415,24 @@ export function WatermarkStudio() {
                       }}
                       className="text-xs text-muted-foreground hover:text-destructive transition-colors flex items-center gap-1 rounded-lg px-2 py-1 hover:bg-destructive/8"
                     >
-                      <X className="size-3" />
-                      پاک کردن همه
+                      <X className="size-3" />{t.studio.clearAll}
                     </button>
                   </div>
 
-                  <div
-                    className="grid gap-2 overflow-y-auto"
-                    style={{
-                      gridTemplateColumns: 'repeat(auto-fill, minmax(72px, 1fr))',
-                      maxHeight: 260,
-                    }}
-                  >
+                  <div className="grid gap-2 overflow-y-auto"
+                    style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(72px, 1fr))', maxHeight: 260 }}>
                     <AnimatePresence initial={false}>
                       {images.map((img) => {
-                        const done =
-                          processedCount > 0 &&
-                          images.indexOf(img) < processedCount;
+                        const done = processedCount > 0 && images.indexOf(img) < processedCount;
                         return (
-                          <motion.div
-                            key={img.id}
-                            layout
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
+                          <motion.div key={img.id} layout
+                            initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.7, transition: { duration: 0.15 } }}
                             className="relative group aspect-square"
                           >
                             <div className="w-full h-full rounded-xl overflow-hidden bg-muted ring-2 ring-transparent group-hover:ring-primary/30 transition-all">
                               {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img
-                                src={img.url}
-                                alt={img.name}
-                                className="w-full h-full object-cover"
-                                loading="lazy"
-                              />
+                              <img src={img.url} alt={img.name} className="w-full h-full object-cover" loading="lazy" />
                             </div>
                             {done && (
                               <div className="absolute inset-0 rounded-xl bg-emerald-500/25 flex items-center justify-center pointer-events-none">
@@ -509,10 +440,7 @@ export function WatermarkStudio() {
                               </div>
                             )}
                             <button
-                              onClick={() => {
-                                removeImage(img.id);
-                                setProcessedCount(0);
-                              }}
+                              onClick={() => { removeImage(img.id); setProcessedCount(0); }}
                               className="absolute -top-1.5 -end-1.5 size-5 rounded-full bg-destructive text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
                             >
                               <X className="size-2.5" />
@@ -523,33 +451,20 @@ export function WatermarkStudio() {
                     </AnimatePresence>
                   </div>
 
-                  {/* Progress bar */}
                   <AnimatePresence>
                     {isProcessing && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="mt-4 overflow-hidden"
-                      >
+                      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }} className="mt-4 overflow-hidden">
                         <div className="flex items-center justify-between text-xs mb-1.5">
                           <span className="text-muted-foreground flex items-center gap-1.5">
-                            <Loader2 className="size-3 animate-spin" />
-                            در حال پردازش...
+                            <Loader2 className="size-3 animate-spin" />{t.studio.processingLabel}
                           </span>
-                          <span className="font-bold text-primary tabular-nums">
-                            {processedCount}/{images.length}
-                          </span>
+                          <span className="font-bold text-primary tabular-nums">{processedCount}/{images.length}</span>
                         </div>
                         <div className="h-2 rounded-full bg-muted overflow-hidden">
                           <motion.div
                             className="h-full bg-gradient-to-r from-primary to-violet-500 rounded-full"
-                            animate={{
-                              width:
-                                images.length > 0
-                                  ? `${(processedCount / images.length) * 100}%`
-                                  : '0%',
-                            }}
+                            animate={{ width: images.length > 0 ? `${(processedCount / images.length) * 100}%` : '0%' }}
                             transition={{ duration: 0.3 }}
                           />
                         </div>
@@ -565,22 +480,20 @@ export function WatermarkStudio() {
         {/* ═══ RIGHT: Controls ══════════════════════════════════════ */}
         <div className="space-y-4">
 
-          {/* ─── 1. Logo Upload ───────────────────────────────────── */}
+          {/* ─── 1. Logo ──────────────────────────────────────────── */}
           <SectionCard>
             <div className="flex items-center gap-2 mb-4">
               <div className="size-7 rounded-xl bg-violet-500/10 flex items-center justify-center">
                 <ImageIcon className="size-3.5 text-violet-500" />
               </div>
-              <h3 className="text-sm font-bold">لوگوی واترمارک</h3>
+              <h3 className="text-sm font-bold">{t.studio.logoTitle}</h3>
               {!logoUrl ? (
                 <span className="ms-auto text-xs text-muted-foreground/60 flex items-center gap-1">
-                  <span className="size-1.5 rounded-full bg-amber-400 inline-block" />
-                  ضروری
+                  <span className="size-1.5 rounded-full bg-amber-400 inline-block" />{t.studio.logoRequired}
                 </span>
               ) : (
                 <span className="ms-auto text-xs text-emerald-600 flex items-center gap-1">
-                  <CheckCircle2 className="size-3" />
-                  بارگذاری شد
+                  <CheckCircle2 className="size-3" />{t.studio.logoUploaded}
                 </span>
               )}
             </div>
@@ -589,17 +502,11 @@ export function WatermarkStudio() {
               <div className="relative rounded-2xl overflow-hidden border border-border/60 bg-muted/30">
                 <div className="checkerboard" />
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={logoUrl}
-                  alt="لوگو"
-                  className="relative w-full h-32 object-contain"
-                />
+                <img src={logoUrl} alt="logo" className="relative w-full h-32 object-contain" />
                 <div className="absolute inset-x-0 bottom-0 flex items-center gap-2 px-3 py-2 bg-gradient-to-t from-black/60 to-transparent">
                   <p className="text-white text-xs font-medium truncate flex-1">{logoName}</p>
-                  <button
-                    onClick={removeLogo}
-                    className="size-7 rounded-lg bg-white/15 backdrop-blur-sm text-white flex items-center justify-center hover:bg-destructive/80 transition-colors"
-                  >
+                  <button onClick={removeLogo}
+                    className="size-7 rounded-lg bg-white/15 backdrop-blur-sm text-white flex items-center justify-center hover:bg-destructive/80 transition-colors">
                     <X className="size-3.5" />
                   </button>
                 </div>
@@ -617,32 +524,21 @@ export function WatermarkStudio() {
                 }}
                 onClick={() => logoInputRef.current?.click()}
                 className={cn(
-                  'rounded-2xl border-2 border-dashed cursor-pointer',
-                  'flex flex-col items-center justify-center gap-3 p-8 group',
-                  'transition-all duration-200',
-                  isDraggingLogo
-                    ? 'border-primary bg-primary/8'
-                    : 'border-border hover:border-primary/50 hover:bg-primary/3'
+                  'rounded-2xl border-2 border-dashed cursor-pointer flex flex-col items-center justify-center gap-3 p-8 group transition-all duration-200',
+                  isDraggingLogo ? 'border-primary bg-primary/8' : 'border-border hover:border-primary/50 hover:bg-primary/3'
                 )}
               >
                 <div className="size-14 rounded-2xl bg-muted flex items-center justify-center group-hover:bg-primary/10 transition-colors">
                   <Upload className="size-6 text-muted-foreground group-hover:text-primary transition-colors" />
                 </div>
                 <div className="text-center">
-                  <p className="text-sm font-bold">
-                    {isDraggingLogo ? 'رها کنید!' : 'لوگوی واترمارک'}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">PNG · SVG · JPG</p>
+                  <p className="text-sm font-bold">{t.studio.logoDrop}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t.studio.logoDropFormats}</p>
                 </div>
               </motion.div>
             )}
-            <input
-              ref={logoInputRef}
-              type="file"
-              accept="image/png,image/jpeg,image/webp,image/svg+xml"
-              className="hidden"
-              onChange={(e) => e.target.files?.[0] && handleLogo(e.target.files[0])}
-            />
+            <input ref={logoInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" className="hidden"
+              onChange={(e) => e.target.files?.[0] && handleLogo(e.target.files[0])} />
           </SectionCard>
 
           {/* ─── 2. Placement Template ────────────────────────────── */}
@@ -651,49 +547,41 @@ export function WatermarkStudio() {
               <div className="size-7 rounded-xl bg-primary/10 flex items-center justify-center">
                 <Sparkles className="size-3.5 text-primary" />
               </div>
-              <h3 className="text-sm font-bold">جایگاه واترمارک</h3>
+              <h3 className="text-sm font-bold">{t.studio.templateTitle}</h3>
             </div>
 
-            {/* 4 template cards */}
             <div className="grid grid-cols-4 gap-2 mb-5">
               {PLACEMENT_TEMPLATES.map((tmpl) => (
                 <TemplateCard
                   key={tmpl.id}
                   template={tmpl}
+                  label={templateLabels[tmpl.id] ?? tmpl.id}
                   isSelected={templateId === tmpl.id}
                   onClick={() => setTemplateId(tmpl.id)}
                 />
               ))}
             </div>
 
-            {/* Opacity */}
             <Slider
-              label="شفافیت واترمارک"
+              label={t.studio.opacityLabel}
               showValue
-              formatValue={(v) => `${Math.round(v * 100)}٪`}
-              min={0.1}
-              max={1.0}
-              step={0.05}
+              formatValue={(v) => `${Math.round(v * 100)}%`}
+              min={0.1} max={1.0} step={0.05}
               value={[wmOpacity]}
               onValueChange={([v]) => setWmOpacity(v)}
             />
 
-            {/* Size */}
             <div className="mt-4">
-              <p className="text-xs font-semibold text-muted-foreground mb-2">اندازه واترمارک</p>
+              <p className="text-xs font-semibold text-muted-foreground mb-2">{t.studio.sizeLabel}</p>
               <div className="grid grid-cols-3 gap-1.5">
                 {(['small', 'medium', 'large'] as const).map((sz) => (
-                  <button
-                    key={sz}
-                    onClick={() => setWmSize(sz)}
+                  <button key={sz} onClick={() => setWmSize(sz)}
                     className={cn(
                       'py-2 rounded-xl text-xs font-bold border-2 transition-all',
-                      wmSize === sz
-                        ? 'border-primary bg-primary/10 text-primary'
-                        : 'border-border hover:border-primary/40 text-muted-foreground'
+                      wmSize === sz ? 'border-primary bg-primary/10 text-primary' : 'border-border hover:border-primary/40 text-muted-foreground'
                     )}
                   >
-                    {sz === 'small' ? 'کوچک' : sz === 'medium' ? 'متوسط' : 'بزرگ'}
+                    {sz === 'small' ? t.studio.sizeSmall : sz === 'medium' ? t.studio.sizeMedium : t.studio.sizeLarge}
                   </button>
                 ))}
               </div>
@@ -706,13 +594,13 @@ export function WatermarkStudio() {
               <div className="size-7 rounded-xl bg-amber-500/10 flex items-center justify-center">
                 <Tag className="size-3.5 text-amber-600" />
               </div>
-              <h3 className="text-sm font-bold">نام فایل خروجی</h3>
+              <h3 className="text-sm font-bold">{t.studio.fileNameTitle}</h3>
             </div>
             <input
               type="text"
               value={baseName}
               onChange={(e) => setBaseName(e.target.value)}
-              placeholder="مثال: product یا عکس-محصول"
+              placeholder={t.studio.fileNamePlaceholder}
               className={cn(
                 'w-full rounded-xl border border-border bg-background',
                 'px-3.5 py-2.5 text-sm outline-none',
@@ -723,12 +611,9 @@ export function WatermarkStudio() {
             />
             <p className="mt-2 text-xs text-muted-foreground/65 leading-relaxed">
               {baseName ? (
-                <>
-                  <span className="text-primary/70">مثال: </span>
-                  {baseName}_001.jpg, {baseName}_002.jpg, …
-                </>
+                <><span className="text-primary/70">{t.studio.fileNamePreview}: </span>{baseName}_001.jpg, {baseName}_002.jpg, …</>
               ) : (
-                'اگر خالی باشد، نام اصلی فایل‌ها حفظ می‌شود'
+                t.studio.fileNameDefault
               )}
             </p>
           </SectionCard>
@@ -739,120 +624,85 @@ export function WatermarkStudio() {
               <div className="size-7 rounded-xl bg-emerald-500/10 flex items-center justify-center">
                 <Download className="size-3.5 text-emerald-600" />
               </div>
-              <h3 className="text-sm font-bold">خروجی</h3>
+              <h3 className="text-sm font-bold">{t.studio.exportTitle}</h3>
               {images.length > 0 && (
-                <span className="ms-auto text-xs text-muted-foreground">
-                  {images.length} تصویر
-                </span>
+                <span className="ms-auto text-xs text-muted-foreground">{images.length}</span>
               )}
             </div>
 
-            {/* Not ready hint */}
             {!canProcess && (
               <div className="rounded-2xl bg-muted/60 p-4 mb-4 text-xs text-muted-foreground text-center leading-relaxed">
                 {!images.length && !logoUrl && (
-                  <>
-                    <Info className="size-4 mx-auto mb-1.5 text-muted-foreground/50" />
-                    ابتدا تصاویر و لوگوی واترمارک را بارگذاری کنید
-                  </>
+                  <><Info className="size-4 mx-auto mb-1.5 text-muted-foreground/50" />{t.studio.hintBoth}</>
                 )}
                 {images.length > 0 && !logoUrl && (
-                  <>
-                    <ImageIcon className="size-4 mx-auto mb-1.5 text-amber-500" />
-                    برای شروع، لوگوی واترمارک را بارگذاری کنید
-                  </>
+                  <><ImageIcon className="size-4 mx-auto mb-1.5 text-amber-500" />{t.studio.hintNeedLogo}</>
                 )}
                 {!images.length && logoUrl && (
-                  <>
-                    <Images className="size-4 mx-auto mb-1.5 text-amber-500" />
-                    تصاویر خود را برای افزودن واترمارک بارگذاری کنید
-                  </>
+                  <><Images className="size-4 mx-auto mb-1.5 text-amber-500" />{t.studio.hintNeedImages}</>
                 )}
               </div>
             )}
 
-            {/* Preview button */}
             {canProcess && (
               <Button
-                variant="ghost"
-                size="sm"
+                variant="ghost" size="sm"
                 className="w-full rounded-xl h-9 mb-3 border border-border/60"
                 disabled={isProcessing || isPreviewLoading}
                 onClick={handlePreview}
               >
                 {isPreviewLoading ? (
-                  <><Loader2 className="size-3.5 animate-spin" /> بارگذاری پیش‌نمایش...</>
+                  <><Loader2 className="size-3.5 animate-spin" />{t.studio.previewLoading}</>
                 ) : (
                   <>
-                    <Eye className="size-3.5" />
-                    پیش‌نمایش
-                    <span className="text-muted-foreground text-xs">
-                      ({Math.min(images.length, 3)} تصویر اول)
-                    </span>
+                    <Eye className="size-3.5" />{t.studio.previewBtn}
+                    <span className="text-muted-foreground text-xs">({Math.min(images.length, 3)} {t.studio.previewBtnHint})</span>
                   </>
                 )}
               </Button>
             )}
 
-            {/* Export buttons */}
             <div className="space-y-2.5">
               <Button
-                variant="brand"
-                size="lg"
+                variant="brand" size="lg"
                 className="w-full rounded-2xl h-12 text-sm font-bold gap-2"
                 disabled={!canProcess || isProcessing}
                 onClick={() => runExport('zip')}
               >
                 {isProcessing && exportStore.format === 'zip' ? (
-                  <>
-                    <Loader2 className="size-4 animate-spin" />
+                  <><Loader2 className="size-4 animate-spin" />
                     <span className="tabular-nums">{processedCount}/{images.length}</span>
-                    در حال پردازش...
+                    {t.studio.processingZip}
                   </>
                 ) : (
-                  <>
-                    <FileArchive className="size-4" />
-                    دانلود ZIP
-                    {images.length > 0 && (
-                      <span className="opacity-70 font-normal text-xs">({images.length} تصویر)</span>
-                    )}
+                  <><FileArchive className="size-4" />{t.studio.downloadZip}
+                    {images.length > 0 && <span className="opacity-70 font-normal text-xs">({images.length})</span>}
                   </>
                 )}
               </Button>
 
               <Button
-                variant="outline"
-                size="lg"
+                variant="outline" size="lg"
                 className="w-full rounded-2xl h-12 text-sm font-bold gap-2"
                 disabled={!canProcess || isProcessing}
                 onClick={() => runExport('pdf')}
               >
                 {isProcessing && exportStore.format === 'pdf' ? (
-                  <>
-                    <Loader2 className="size-4 animate-spin" />
-                    در حال آماده‌سازی PDF...
-                  </>
+                  <><Loader2 className="size-4 animate-spin" />{t.studio.processingPdf}</>
                 ) : (
-                  <>
-                    <FileText className="size-4" />
-                    دانلود PDF
-                    {images.length > 0 && (
-                      <span className="opacity-70 font-normal text-xs">({images.length} صفحه)</span>
-                    )}
+                  <><FileText className="size-4" />{t.studio.downloadPdf}
+                    {images.length > 0 && <span className="opacity-70 font-normal text-xs">({images.length})</span>}
                   </>
                 )}
               </Button>
             </div>
 
-            {/* Quality slider */}
             <div className="mt-4 pt-4 border-t border-border/60">
               <Slider
-                label="کیفیت خروجی"
+                label={t.studio.qualityLabel}
                 showValue
-                formatValue={(v) => `${Math.round(v * 100)}٪`}
-                min={0.5}
-                max={1}
-                step={0.02}
+                formatValue={(v) => `${Math.round(v * 100)}%`}
+                min={0.5} max={1} step={0.02}
                 value={[quality]}
                 onValueChange={([v]) => setQuality(v)}
               />
@@ -860,7 +710,7 @@ export function WatermarkStudio() {
 
             {images.length > 0 && (
               <p className="mt-3 text-[11px] text-muted-foreground/65 text-center leading-relaxed">
-                ابعاد اصلی تصاویر حفظ می‌شود · هر تصویر یک صفحه‌ PDF
+                {t.studio.noteOriginalSize}
               </p>
             )}
           </SectionCard>

@@ -1,3 +1,4 @@
+// Developed by @Alirewa — https://github.com/Alirewa
 'use client';
 
 import { useTheme } from 'next-themes';

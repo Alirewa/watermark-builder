@@ -1,3 +1,4 @@
+// Developed by @Alirewa — https://github.com/Alirewa
 import { cn } from '@/lib/utils';
 
 function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {

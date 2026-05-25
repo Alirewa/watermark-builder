@@ -1,3 +1,4 @@
+// Developed by @Alirewa — https://github.com/Alirewa
 'use client';
 
 import { useState } from 'react';
@@ -6,6 +7,7 @@ import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { StoreHydrator } from '@/components/shared/StoreHydrator';
+import { DirectionSetter } from '@/components/shared/DirectionSetter';
 import { ToastContainer } from '@/components/shared/ToastContainer';
 import { ModalContainer } from '@/components/shared/ModalContainer';
 import { ExportProgressModal } from '@/components/export/ExportProgressModal';
@@ -20,6 +22,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <>
       <StoreHydrator />
+      <DirectionSetter />
     <div className="h-screen overflow-hidden bg-brand-mesh flex">
       {/* Sidebar — fixed on mobile, in-flow on desktop */}
       <Sidebar

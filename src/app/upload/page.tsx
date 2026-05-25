@@ -1,3 +1,4 @@
+// Developed by @Alirewa — https://github.com/Alirewa
 import dynamic from 'next/dynamic';
 import { AppShell } from '@/components/shared/AppShell';
 import type { Metadata } from 'next';

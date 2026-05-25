@@ -1,3 +1,4 @@
+// Developed by @Alirewa — https://github.com/Alirewa
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { ThemeWrapper } from '@/components/shared/ThemeWrapper';

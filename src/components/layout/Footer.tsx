@@ -1,9 +1,13 @@
+// Developed by @Alirewa — https://github.com/Alirewa
 'use client';
 
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { useT } from '@/hooks/useT';
 
 export function Footer({ className }: { className?: string }) {
+  const { t } = useT();
+
   return (
     <footer
       className={cn(
@@ -14,14 +18,14 @@ export function Footer({ className }: { className?: string }) {
         className
       )}
     >
-      <span>واترمارک‌ساز · نسخه ۱.۰.۰</span>
+      <span>واترمارک‌ساز · {t.footer.version}</span>
       <Link
         href="https://github.com/Alirewa"
         target="_blank"
         rel="noopener noreferrer"
         className="hover:text-muted-foreground transition-colors"
       >
-        Developed by @Alirewa
+        {t.footer.developedBy}
       </Link>
     </footer>
   );

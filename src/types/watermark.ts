@@ -1,3 +1,4 @@
+// Developed by @Alirewa — https://github.com/Alirewa
 /* ─── Watermark Types ──────────────────────────────────────────── */
 
 export type WatermarkMode = 'text' | 'image' | 'qr';

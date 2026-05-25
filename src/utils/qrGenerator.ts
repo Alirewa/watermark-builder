@@ -1,3 +1,4 @@
+// Developed by @Alirewa — https://github.com/Alirewa
 import type { QRWatermarkConfig } from '@/types/watermark';
 
 export async function generateQRDataUrl(config: QRWatermarkConfig): Promise<string> {

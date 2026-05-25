@@ -1,3 +1,4 @@
+// Developed by @Alirewa — https://github.com/Alirewa
 import type { LicenseData, LicenseStatus } from '@/types';
 
 const LICENSE_STORAGE_KEY = 'wm_license';

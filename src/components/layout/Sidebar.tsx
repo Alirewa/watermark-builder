@@ -1,3 +1,4 @@
+// Developed by @Alirewa — https://github.com/Alirewa
 'use client';
 
 import Link from 'next/link';
@@ -11,16 +12,19 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { mainNavItems, bottomNavItems } from './nav-items';
+import { useT } from '@/hooks/useT';
 import type { NavItem } from '@/types';
 
 /* ─── Nav Item ────────────────────────────────────────────────── */
 function SidebarNavItem({
   item,
   collapsed,
+  isRTL,
   onNavigate,
 }: {
   item: NavItem;
   collapsed: boolean;
+  isRTL: boolean;
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
@@ -71,9 +75,16 @@ function SidebarNavItem({
         </Badge>
       )}
 
-      {/* Tooltip — shows to the LEFT of collapsed sidebar (toward content area) */}
+      {/* Tooltip — appears toward the content area */}
       {collapsed && (
-        <span className="absolute right-full me-2 px-2.5 py-1 rounded-lg bg-popover border border-border text-foreground text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity shadow-lg z-50">
+        <span
+          className={cn(
+            'absolute px-2.5 py-1 rounded-lg bg-popover border border-border',
+            'text-foreground text-xs whitespace-nowrap',
+            'opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity shadow-lg z-50',
+            isRTL ? 'right-full me-2' : 'left-full ms-2'
+          )}
+        >
           {item.label}
         </span>
       )}
@@ -90,8 +101,21 @@ interface SidebarProps {
 export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
   const { sidebarState, toggleSidebar } = useAppStore();
   const isMobile = useIsMobile();
+  const { t, lang } = useT();
+  const isRTL = lang === 'fa';
   const collapsed = !isMobile && sidebarState === 'collapsed';
   const desktopWidth = collapsed ? 72 : 260;
+
+  /* Translate nav labels dynamically */
+  const navMap: Record<string, string> = {
+    dashboard: t.nav.dashboard,
+    watermark: t.nav.watermark,
+    settings: t.nav.settings,
+  };
+  const translateItem = (item: NavItem): NavItem => ({
+    ...item,
+    label: navMap[item.id] ?? item.label,
+  });
 
   return (
     <>
@@ -115,24 +139,19 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
         initial={false}
         animate={
           isMobile
-            ? /* slide in/out from the right (RTL: right = start side) */
-              { x: mobileOpen ? 0 : 280 }
-            : /* desktop: animate width, reset x */
-              { width: desktopWidth, x: 0 }
+            ? { x: mobileOpen ? 0 : isRTL ? 280 : -280 }
+            : { width: desktopWidth, x: 0 }
         }
         transition={{ type: 'spring', bounce: 0, duration: 0.28 }}
         className={cn(
           'flex flex-col h-full',
           'glass border-s border-border',
-          /* mobile: fixed on the right side of the viewport */
           'fixed top-0 z-50',
-          /* desktop: in-flow, auto width handled by animate */
           'lg:relative lg:z-auto'
         )}
         style={{
-          /* Physical right: 0 so the sidebar lives on the right side in RTL */
-          right: 0,
-          /* Fixed width on mobile; desktop width is animated by Framer Motion */
+          /* Switch physical side based on direction */
+          [isRTL ? 'right' : 'left']: 0,
           width: isMobile ? 260 : undefined,
         }}
       >
@@ -151,13 +170,12 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
             {!collapsed && (
               <div className="overflow-hidden">
                 <p className="font-bold text-sm leading-tight whitespace-nowrap">
-                  واترمارک‌ساز
+                  {t.header.brand}
                 </p>
               </div>
             )}
           </Link>
 
-          {/* Close on mobile / collapse on desktop */}
           {isMobile ? (
             <button
               onClick={onMobileClose}
@@ -170,9 +188,10 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
               <button
                 onClick={toggleSidebar}
                 className="rounded-xl p-1.5 hover:bg-accent transition-colors text-muted-foreground"
-                title="جمع کردن نوار کناری"
+                title={t.header.collapseMenu}
               >
-                <ChevronLeft className="size-4" />
+                {/* Arrow points inward toward content */}
+                <ChevronLeft className={cn('size-4', !isRTL && 'rotate-180')} />
               </button>
             )
           )}
@@ -184,8 +203,9 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
             {mainNavItems.map((item) => (
               <SidebarNavItem
                 key={item.id}
-                item={item}
+                item={translateItem(item)}
                 collapsed={collapsed}
+                isRTL={isRTL}
                 onNavigate={isMobile ? onMobileClose : undefined}
               />
             ))}
@@ -197,8 +217,9 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
             {bottomNavItems.map((item) => (
               <SidebarNavItem
                 key={item.id}
-                item={item}
+                item={translateItem(item)}
                 collapsed={collapsed}
+                isRTL={isRTL}
                 onNavigate={isMobile ? onMobileClose : undefined}
               />
             ))}
@@ -211,9 +232,9 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
             <button
               onClick={toggleSidebar}
               className="w-full flex items-center justify-center rounded-xl p-2.5 hover:bg-accent transition-colors text-muted-foreground"
-              title="باز کردن نوار کناری"
+              title={t.header.expandMenu}
             >
-              <ChevronLeft className="size-4 rotate-180" />
+              <ChevronLeft className={cn('size-4', isRTL ? 'rotate-180' : 'rotate-0')} />
             </button>
           </div>
         )}

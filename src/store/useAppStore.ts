@@ -1,3 +1,4 @@
+// Developed by @Alirewa — https://github.com/Alirewa
 import { create } from 'zustand';
 import type { SidebarState, LicenseState, ToastItem, ModalConfig, UploadedFile, WatermarkConfig } from '@/types';
 import { generateId } from '@/lib/utils';

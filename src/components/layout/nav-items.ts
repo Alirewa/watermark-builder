@@ -1,3 +1,4 @@
+// Developed by @Alirewa — https://github.com/Alirewa
 import { LayoutDashboard, Layers, Settings } from 'lucide-react';
 import type { NavItem } from '@/types';
 

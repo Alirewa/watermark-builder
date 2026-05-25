@@ -1,3 +1,4 @@
+// Developed by @Alirewa — https://github.com/Alirewa
 export * from './badge';
 export * from './button';
 export * from './card';
