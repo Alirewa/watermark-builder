@@ -23,6 +23,7 @@ export interface Translations {
 
   /* ── Footer ──────────────────────────────────────────── */
   footer: {
+    appName: string;
     version: string;
     developedBy: string;
   };
@@ -145,6 +146,7 @@ export const fa: Translations = {
   },
 
   footer: {
+    appName: 'واترمارک‌ساز',
     version: 'نسخه ۱.۰.۰',
     developedBy: 'Developed by @Alirewa',
   },
@@ -254,6 +256,7 @@ export const en: Translations = {
   },
 
   footer: {
+    appName: 'watermark-builder',
     version: 'v1.0.0',
     developedBy: 'Developed by @Alirewa',
   },
