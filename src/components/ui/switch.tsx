@@ -19,16 +19,18 @@ const Switch = React.forwardRef<
       className
     )}
     {...props}
+    // Force LTR layout so flex-start is always the physical left edge.
+    // This ensures translate-x-0 (off) = left  and  translate-x-5 (on) = right
+    // regardless of the page writing direction.
+    dir="ltr"
     ref={ref}
   >
     <SwitchPrimitives.Thumb
       className={cn(
         'pointer-events-none block size-5 rounded-full bg-white shadow-lg',
         'transition-transform duration-200',
-        // LTR: unchecked = left (0),  checked = right (+20px)
-        'data-[state=unchecked]:translate-x-0 data-[state=checked]:translate-x-5',
-        // RTL: unchecked = right (+20px), checked = left (0)  — swap positions
-        '[dir=rtl]:data-[state=unchecked]:translate-x-5 [dir=rtl]:data-[state=checked]:translate-x-0'
+        'data-[state=unchecked]:translate-x-0',   // off  → left  (physical)
+        'data-[state=checked]:translate-x-5',      // on   → right (physical)
       )}
     />
   </SwitchPrimitives.Root>
