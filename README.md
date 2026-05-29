@@ -1,216 +1,92 @@
-<div dir="rtl">
+# watermark-builder
 
-<div align="center">
+A browser-based tool for adding watermarks to images in bulk. Drop your images, pick a placement template, and export — everything runs locally on your machine.
 
-<img src="public/favicon.ico" width="64" height="64" alt="watermark-builder logo" />
-
-# واترمارک‌ساز
-
-**استودیوی حرفه‌ای افزودن واترمارک به تصاویر**
-
-[![Live Demo](https://img.shields.io/badge/🌐_لایو_دمو-alirewa.github.io-6172f3?style=for-the-badge)](https://alirewa.github.io/watermark-builder)
-[![GitHub](https://img.shields.io/badge/GitHub-Alirewa%2Fwatermark--builder-181717?style=for-the-badge&logo=github)](https://github.com/Alirewa/watermark-builder)
-[![Version](https://img.shields.io/badge/نسخه-1.0.0-22c55e?style=for-the-badge)](#)
-[![License](https://img.shields.io/badge/License-MIT-f59e0b?style=for-the-badge)](#)
-
-[🇮🇷 فارسی](#-معرفی) • [🇬🇧 English](#-introduction)
-
-</div>
+**Live:** https://alirewa.github.io/watermark-builder
 
 ---
 
-## 🇮🇷 معرفی
+## Why I built this
 
-**واترمارک‌ساز** یک ابزار وب مدرن و رایگان برای افزودن واترمارک به تصاویر است. تمام پردازش‌ها مستقیماً در مرورگر انجام می‌شود — بدون آپلود تصویر به سرور، بدون نیاز به اینترنت پس از بارگذاری اولیه، و بدون هیچ هزینه‌ای.
+I needed to watermark a lot of product photos at once. Every online tool either had a file size limit, uploaded images to a server, or charged for bulk exports. So I built this instead — it processes everything in the browser using the Canvas API, nothing ever leaves your machine.
 
-### ✨ ویژگی‌ها
+## What it does
 
-- 🖼️ **پردازش دسته‌ای** — تا ۱۰۰ تصویر را همزمان بارگذاری و پردازش کنید
-- 📐 **۴ قالب جایگذاری** — مثلث، قطری، گوشه‌ها، افقی
-- 🎚️ **کنترل کامل** — تنظیم شفافیت و اندازه واترمارک
-- 💾 **خروجی ZIP و PDF** — دانلود فوری با کیفیت قابل تنظیم
-- 🌙 **حالت تاریک/روشن** — پشتیبانی کامل از تم‌های light/dark/system
-- 🌐 **دوزبانه FA/EN** — رابط کاربری کامل به فارسی و انگلیسی با RTL/LTR
-- 📱 **رسپانسیو** — طراحی کاملاً سازگار با موبایل، تبلت و دسکتاپ
-- 🔒 **حریم خصوصی** — هیچ تصویری به سرور ارسال نمی‌شود
+- Upload up to 100 images at once and watermark them all in one go
+- Use your own logo/image as the watermark
+- Choose from 4 placement layouts: triangle, diagonal, corners, or horizontal
+- Adjust opacity and size
+- Export as a ZIP (individual files) or a single PDF (one page per image, original dimensions)
+- Custom output filename prefix with auto-numbered files (`product_001.jpg`, `product_002.jpg`, ...)
+- Dark and light theme
+- Fully bilingual — Persian (RTL) and English, switchable at runtime
 
-### 🛠️ تکنولوژی‌ها
+## Stack
 
-| لایه | ابزار |
-|------|-------|
-| فریم‌ورک | Next.js 14 (App Router) |
-| زبان | TypeScript |
-| استایل | Tailwind CSS v3 |
-| کامپوننت | Radix UI + shadcn/ui |
-| انیمیشن | Framer Motion |
-| وضعیت | Zustand (با persist) |
-| پردازش تصویر | HTML5 Canvas API |
-| خروجی PDF | pdf-lib |
-| خروجی ZIP | JSZip |
-| آیکون | Lucide React |
+Next.js 14 · TypeScript · Tailwind CSS · Radix UI · Framer Motion · Zustand · Canvas API · pdf-lib · JSZip
 
-### 🚀 راه‌اندازی محلی
+## Running locally
 
 ```bash
-# کلون کردن مخزن
 git clone https://github.com/Alirewa/watermark-builder.git
 cd watermark-builder
-
-# نصب وابستگی‌ها
 npm install --legacy-peer-deps
-
-# اجرا در حالت توسعه
 npm run dev
 ```
 
-سپس مرورگر را روی [http://localhost:3000](http://localhost:3000) باز کنید.
+Open http://localhost:3000.
 
-### 📦 بیلد و دپلوی
+## Deploying
+
+The project exports as a fully static site (`output: 'export'` in next.config.mjs), so it can be hosted anywhere that serves static files — GitHub Pages, Netlify, Cloudflare Pages, or just an S3 bucket.
+
+### GitHub Pages (this repo's setup)
+
+Deployment is automated via GitHub Actions (`.github/workflows/deploy.yml`). Every push to `master` triggers a build and deploys the output to the `github-pages` environment automatically.
+
+If you fork this repo, you'll need to enable GitHub Pages manually:
+
+1. Go to **Settings → Pages**
+2. Set source to **GitHub Actions**
+3. Push anything to `master` — the workflow handles the rest
+
+The workflow sets `NEXT_PUBLIC_BASE_PATH=/watermark-builder` during the build so assets load correctly under the subpath. When running locally (or deploying to a root domain), that variable isn't set and defaults to an empty string.
+
+### Vercel / Netlify / Cloudflare Pages
 
 ```bash
-# بیلد استاتیک برای GitHub Pages
-NEXT_PUBLIC_BASE_PATH=/watermark-builder npm run build
-
-# بیلد معمولی (برای Vercel / سرور)
-npm run build
+npm run build        # outputs to ./out
 ```
 
-> **دپلوی خودکار:** هر push به شاخه `master` به صورت خودکار از طریق GitHub Actions روی GitHub Pages دپلوی می‌شود.
+Point your hosting provider to the `out` directory. No environment variables needed unless you're deploying to a subpath.
 
-### 📁 ساختار پروژه
+### Self-hosted
+
+```bash
+npm run build
+# serve ./out with any static file server
+npx serve out
+```
+
+## Project structure
 
 ```
 src/
-├── app/                  # صفحات Next.js App Router
+├── app/                   # Next.js App Router pages
 ├── components/
-│   ├── layout/           # Header، Footer، Sidebar
-│   ├── shared/           # کامپوننت‌های مشترک
-│   └── ui/               # کامپوننت‌های پایه (shadcn)
+│   ├── layout/            # Header, Sidebar, Footer
+│   ├── shared/            # Utility components (StoreHydrator, DirectionSetter, ...)
+│   └── ui/                # Base components built on Radix UI
 ├── features/
-│   └── watermark/        # منطق اصلی استودیوی واترمارک
-├── hooks/                # Custom hooks
-├── i18n/                 # ترجمه‌های FA/EN
-├── lib/
-│   └── watermark/        # موتور پردازش Canvas
-├── store/                # Zustand stores
-├── types/                # TypeScript types
-└── utils/                # توابع کمکی (PDF، ZIP، ...)
+│   └── watermark/         # The main studio — upload, preview, export
+├── hooks/                 # useT (i18n), useMediaQuery, etc.
+├── i18n/                  # FA + EN translation objects
+├── lib/watermark/         # Canvas watermark engine
+├── store/                 # Zustand stores (app, watermark, language, export)
+├── types/
+└── utils/                 # exportPdf, exportZip, helpers
 ```
 
-### 🗺️ نقشه راه
+## License
 
-- [ ] پشتیبانی از واترمارک متنی
-- [ ] تاریخچه پردازش‌ها
-- [ ] تنظیمات پیشرفته‌تر (چرخش، رنگ)
-- [ ] پشتیبانی از فرمت WebP در خروجی
-
-### 👤 توسعه‌دهنده
-
-ساخته شده با ❤️ توسط **[@Alirewa](https://github.com/Alirewa)**
-
----
-
-</div>
-
----
-
-## 🇬🇧 Introduction
-
-**watermark-builder** is a modern, free, browser-based tool for adding watermarks to images. All processing happens directly in your browser — no image uploads to any server, no internet required after the initial load, and completely free.
-
-### ✨ Features
-
-- 🖼️ **Batch Processing** — Upload and process up to 100 images simultaneously
-- 📐 **4 Placement Templates** — Triangle, Diagonal, Corners, Horizontal
-- 🎚️ **Full Control** — Adjust watermark opacity and size
-- 💾 **ZIP & PDF Export** — Instant download with adjustable quality
-- 🌙 **Dark / Light Mode** — Full support for light, dark, and system themes
-- 🌐 **Bilingual FA/EN** — Complete Persian and English UI with RTL/LTR support
-- 📱 **Fully Responsive** — Works great on mobile, tablet, and desktop
-- 🔒 **Privacy First** — Your images never leave your browser
-
-### 🛠️ Tech Stack
-
-| Layer | Tool |
-|-------|------|
-| Framework | Next.js 14 (App Router) |
-| Language | TypeScript |
-| Styling | Tailwind CSS v3 |
-| Components | Radix UI + shadcn/ui |
-| Animation | Framer Motion |
-| State | Zustand (with persist) |
-| Image Processing | HTML5 Canvas API |
-| PDF Export | pdf-lib |
-| ZIP Export | JSZip |
-| Icons | Lucide React |
-
-### 🚀 Local Development
-
-```bash
-# Clone the repository
-git clone https://github.com/Alirewa/watermark-builder.git
-cd watermark-builder
-
-# Install dependencies
-npm install --legacy-peer-deps
-
-# Start development server
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-### 📦 Build & Deploy
-
-```bash
-# Static build for GitHub Pages
-NEXT_PUBLIC_BASE_PATH=/watermark-builder npm run build
-
-# Standard build (for Vercel / server)
-npm run build
-```
-
-> **Auto Deploy:** Every push to `master` automatically deploys to GitHub Pages via GitHub Actions.
-
-### 📁 Project Structure
-
-```
-src/
-├── app/                  # Next.js App Router pages
-├── components/
-│   ├── layout/           # Header, Footer, Sidebar
-│   ├── shared/           # Shared components
-│   └── ui/               # Base UI components (shadcn)
-├── features/
-│   └── watermark/        # Watermark studio core logic
-├── hooks/                # Custom hooks
-├── i18n/                 # FA/EN translations
-├── lib/
-│   └── watermark/        # Canvas processing engine
-├── store/                # Zustand stores
-├── types/                # TypeScript types
-└── utils/                # Helpers (PDF, ZIP, ...)
-```
-
-### 🗺️ Roadmap
-
-- [ ] Text watermark support
-- [ ] Processing history
-- [ ] Advanced options (rotation, color tint)
-- [ ] WebP output format support
-
-### 👤 Author
-
-Built with ❤️ by **[@Alirewa](https://github.com/Alirewa)**
-
-### 📄 License
-
-This project is open source and available under the [MIT License](LICENSE).
-
----
-
-<div align="center">
-
-⭐ **اگه این پروژه برات مفید بود، یه ستاره بده!** &nbsp;|&nbsp; **If you find this useful, drop a star!** ⭐
-
-</div>
+MIT
